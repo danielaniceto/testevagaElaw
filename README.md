@@ -6,6 +6,7 @@ Esse repositório foi criado para receber o codigo do teste da Vaga de Dev Pytho
 1.1. Desenvolver um webcrawler.
 
 2. Passos
+   
 2.1. Itens
    
 2.1.1. Acessar o site
