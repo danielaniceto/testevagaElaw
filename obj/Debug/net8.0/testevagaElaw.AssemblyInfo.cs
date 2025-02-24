@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("testevagaElaw")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b154bfc7f4335cafbb9e9b715c5355f50350f1b4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dfd821226616fd47a74d1f0540b3369d8eb96b7b")]
 [assembly: System.Reflection.AssemblyProductAttribute("testevagaElaw")]
 [assembly: System.Reflection.AssemblyTitleAttribute("testevagaElaw")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
