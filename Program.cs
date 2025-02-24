@@ -66,29 +66,65 @@ class Program
     }
 
     static async Task<List<ProxyData>> ProcessPage(string url, int pageNumber)
+{
+    await Semaphore.WaitAsync();
+    List<ProxyData> proxies = new List<ProxyData>();
+    
+    var policy = Policy<HttpResponseMessage>
+        .Handle<HttpRequestException>()
+        .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));  
+
+    try
     {
-        await Semaphore.WaitAsync();
-        List<ProxyData> proxies = new List<ProxyData>();
+        Console.WriteLine($"Baixando página {pageNumber}...");
+        
+        HttpResponseMessage response = await policy.ExecuteAsync(() => Client.GetAsync(url));
+        string html = await response.Content.ReadAsStringAsync();
 
-        try
+        // Salvando o HTML da página em um arquivo .html
+        string directoryPath = "html_pages";
+        Directory.CreateDirectory(directoryPath);
+        string filePath = Path.Combine(directoryPath, $"page_{pageNumber}.html");
+        File.WriteAllText(filePath, html);
+        Console.WriteLine($"Página {pageNumber} salva em {filePath}");
+
+        // Processar o HTML para extrair os dados dos proxies
+        HtmlDocument doc = new HtmlDocument();
+        doc.LoadHtml(html);
+
+        var rows = doc.DocumentNode.SelectNodes("//tr[contains(@class, 'proxy-row')]");
+        if (rows != null)
         {
-            Console.WriteLine($"Baixando página {pageNumber}...");
-            HttpResponseMessage response = await Policy.ExecuteAsync(() => Client.GetAsync(url));
-            string html = await response.Content.ReadAsStringAsync();
-            proxies = ExtractProxiesFromHtml(html);
-            Interlocked.Increment(ref totalPages);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erro ao processar página {pageNumber}: {ex.Message}");
-        }
-        finally
-        {
-            Semaphore.Release();
+            Interlocked.Add(ref totalRows, rows.Count); // Contador de proxies extraídos
+            foreach (var row in rows)
+            {
+                var columns = row.SelectNodes("td");
+                if (columns != null && columns.Count >= 4)
+                {
+                    proxies.Add(new ProxyData
+                    {
+                        IpAddress = columns[0].InnerText.Trim(),
+                        Port = columns[1].InnerText.Trim(),
+                        Country = columns[2].InnerText.Trim(),
+                        Protocol = columns[3].InnerText.Trim()
+                    });
+                }
+            }
         }
 
-        return proxies;
+        Interlocked.Increment(ref totalPages); // Contador de páginas processadas
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erro ao processar página {pageNumber}: {ex.Message}");
+    }
+    finally
+    {
+        Semaphore.Release();
+    }
+
+    return proxies;
+}
 
     static List<ProxyData> ExtractProxiesFromHtml(string html)
     {
